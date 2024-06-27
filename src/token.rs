@@ -25,8 +25,17 @@ pub enum TokenType {
     INT,   // integer: 123
 
     // Operators
-    ASSIGN, // =
-    PLUS,   // +
+    ASSIGN,   // =
+    PLUS,     // +
+    MINUS,    // -
+    BANG,     // !
+    ASTERISK, // *
+    SLASH,    // /
+
+    LT,     // <
+    GT,     // >
+    EQ,     // ==
+    NOT_EQ, // !=
 
     // Delimeters
     COMMA,     // ","
@@ -41,6 +50,10 @@ pub enum TokenType {
     FUNCTION,
     LET,
     RETURN,
+    TRUE,
+    FALSE,
+    IF,
+    ELSE,
 
     // empty token for Default trait
     #[default]
@@ -53,6 +66,10 @@ impl TokenType {
             "function" => return TokenType::FUNCTION,
             "let" => return TokenType::LET,
             "return" => return TokenType::RETURN,
+            "true" => return TokenType::TRUE,
+            "false" => return TokenType::FALSE,
+            "if" => return TokenType::IF,
+            "else" => return TokenType::ELSE,
             _ => return TokenType::IDENT,
         };
     }
