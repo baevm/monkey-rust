@@ -1,7 +1,7 @@
 use crate::token::{self, Token, TokenType};
 
 #[derive(Default)]
-struct Lexer {
+pub struct Lexer {
     input: String,
     position: i64,      // current position in input (current char)
     read_position: i64, // current reading position in input (next char)
@@ -9,7 +9,7 @@ struct Lexer {
 }
 
 impl Lexer {
-    fn new(input: &str) -> Self {
+    pub fn new(input: &str) -> Self {
         let mut lexer = Lexer {
             input: input.to_string(),
             ..Default::default()
@@ -47,7 +47,7 @@ impl Lexer {
         }
     }
 
-    fn next_token(&mut self) -> Token {
+    pub fn next_token(&mut self) -> Token {
         let mut token = Token::default();
 
         self.skip_whitespaces();
