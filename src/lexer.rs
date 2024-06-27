@@ -36,41 +36,51 @@ impl Lexer {
     }
 
     fn next_token(&mut self) -> Token {
-        let mut token = Token {
-            ..Default::default()
-        };
+        let mut token = Token::default();
+
+        self.skip_whitespaces();
 
         match self.ch {
             '=' => {
-                token = new_token(TokenType::ASSIGN, self.ch);
+                token = Token::new(TokenType::ASSIGN, self.ch);
             }
             ';' => {
-                token = new_token(TokenType::SEMICOLON, self.ch);
+                token = Token::new(TokenType::SEMICOLON, self.ch);
             }
             ',' => {
-                token = new_token(TokenType::COMMA, self.ch);
+                token = Token::new(TokenType::COMMA, self.ch);
             }
             '(' => {
-                token = new_token(TokenType::LPAREN, self.ch);
+                token = Token::new(TokenType::LPAREN, self.ch);
             }
             ')' => {
-                token = new_token(TokenType::RPAREN, self.ch);
+                token = Token::new(TokenType::RPAREN, self.ch);
             }
             '{' => {
-                token = new_token(TokenType::LBRACE, self.ch);
+                token = Token::new(TokenType::LBRACE, self.ch);
             }
             '}' => {
-                token = new_token(TokenType::RBRACE, self.ch);
+                token = Token::new(TokenType::RBRACE, self.ch);
             }
             '+' => {
-                token = new_token(TokenType::PLUS, self.ch);
+                token = Token::new(TokenType::PLUS, self.ch);
             }
             '\0' => {
                 token.literal = "".to_string();
                 token.token_type = TokenType::EOF
             }
-            _ => {
-                panic!("Token not implemented")
+            ch => {
+                if is_letter(ch) {
+                    token.literal = self.read_identifier();
+                    token.token_type = TokenType::lookup_identifier(&token.literal);
+                    return token;
+                } else if is_digit(ch) {
+                    token.literal = self.read_number();
+                    token.token_type = TokenType::INT;
+                    return token;
+                } else {
+                    token = Token::new(TokenType::ILLEGAL, ch)
+                }
             }
         }
 
@@ -78,13 +88,53 @@ impl Lexer {
 
         return token;
     }
+
+    fn read_identifier(&mut self) -> String {
+        let start = self.position;
+
+        while is_letter(self.ch) {
+            self.read_char();
+        }
+
+        return self
+            .input
+            .chars()
+            .into_iter()
+            .skip(start.try_into().unwrap())
+            .take((self.position - start).try_into().unwrap())
+            .collect();
+    }
+
+    fn read_number(&mut self) -> String {
+        let start = self.position;
+
+        while is_digit(self.ch) {
+            self.read_char();
+        }
+
+        return self
+            .input
+            .chars()
+            .into_iter()
+            .skip(start.try_into().unwrap())
+            .take((self.position - start).try_into().unwrap())
+            .collect();
+    }
+
+    fn skip_whitespaces(&mut self) {
+        while self.ch == ' ' || self.ch == '\t' || self.ch == '\n' || self.ch == '\r' {
+            self.read_char();
+        }
+    }
 }
 
-fn new_token(token_type: TokenType, ch: char) -> Token {
-    return Token {
-        token_type: token_type,
-        literal: ch.to_string(),
-    };
+/* Allowed characters in identifiers: a-z, A-Z, _ */
+fn is_letter(ch: char) -> bool {
+    return ch.is_ascii_alphabetic() || ch == '_';
+}
+
+fn is_digit(ch: char) -> bool {
+    return ch.is_ascii_digit();
 }
 
 #[cfg(test)]
@@ -95,16 +145,52 @@ mod tests {
 
     #[test]
     fn test_next_token() {
-        let input = "=+(){},;";
+        let input = "let foo = 5;
+        let bar = 10;
+
+        let add = function(x, y) {
+            return x + y;
+        }
+
+        let result = add(foo, bar);
+        ";
 
         let tests = [
+            (TokenType::LET, "let"),
+            (TokenType::IDENT, "foo"),
             (TokenType::ASSIGN, "="),
-            (TokenType::PLUS, "+"),
+            (TokenType::INT, "5"),
+            (TokenType::SEMICOLON, ";"),
+            (TokenType::LET, "let"),
+            (TokenType::IDENT, "bar"),
+            (TokenType::ASSIGN, "="),
+            (TokenType::INT, "10"),
+            (TokenType::SEMICOLON, ";"),
+            (TokenType::LET, "let"),
+            (TokenType::IDENT, "add"),
+            (TokenType::ASSIGN, "="),
+            (TokenType::FUNCTION, "function"),
             (TokenType::LPAREN, "("),
+            (TokenType::IDENT, "x"),
+            (TokenType::COMMA, ","),
+            (TokenType::IDENT, "y"),
             (TokenType::RPAREN, ")"),
             (TokenType::LBRACE, "{"),
+            (TokenType::RETURN, "return"),
+            (TokenType::IDENT, "x"),
+            (TokenType::PLUS, "+"),
+            (TokenType::IDENT, "y"),
+            (TokenType::SEMICOLON, ";"),
             (TokenType::RBRACE, "}"),
+            (TokenType::LET, "let"),
+            (TokenType::IDENT, "result"),
+            (TokenType::ASSIGN, "="),
+            (TokenType::IDENT, "add"),
+            (TokenType::LPAREN, "("),
+            (TokenType::IDENT, "foo"),
             (TokenType::COMMA, ","),
+            (TokenType::IDENT, "bar"),
+            (TokenType::RPAREN, ")"),
             (TokenType::SEMICOLON, ";"),
             (TokenType::EOF, ""),
         ];
@@ -114,8 +200,17 @@ mod tests {
         for (expected_token_type, expected_literal) in tests {
             let token = lexer.next_token();
 
-            assert_eq!(token.token_type, expected_token_type);
-            assert_eq!(token.literal, expected_literal);
+            assert_eq!(
+                token.token_type, expected_token_type,
+                "Current token: {:?}, Expected token {:?}. Literal: {}, Expected literal: {}",
+                token.token_type, expected_token_type, token.literal, expected_literal
+            );
+
+            assert_eq!(
+                token.literal, expected_literal,
+                "Current token: {:?}, Expected token {:?}. Literal: {}, Expected literal: {}",
+                token.token_type, expected_token_type, token.literal, expected_literal
+            );
         }
     }
 }
