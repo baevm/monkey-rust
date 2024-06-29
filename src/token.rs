@@ -1,7 +1,4 @@
-use core::fmt;
-use std::collections::HashMap;
-
-#[derive(Default, PartialEq, Debug)]
+#[derive(Default, PartialEq, Clone, Debug)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,
@@ -16,7 +13,7 @@ impl Token {
     }
 }
 
-#[derive(Default, PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug, Clone)]
 pub enum TokenType {
     ILLEGAL, // illegal token/character
     EOF,     // end of file
