@@ -1,15 +1,16 @@
 use crate::token::Token;
 
 /* name of variable */
+#[derive(Default)]
 pub struct Identifier {
-    token: Token,
-    value: String,
+    pub token: Token,
+    pub value: String,
 }
 
 impl Identifier {
-    fn expression_node(&self) {}
+    pub fn expression_node(&self) {}
 
-    fn token_literal(&self) -> String {
+    pub fn token_literal(&self) -> String {
         return self.token.literal.clone();
     }
 }

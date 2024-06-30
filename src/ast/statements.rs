@@ -6,10 +6,10 @@ use super::{
 };
 
 /* let ... */
-struct LetStatement {
-    token: Token,
-    name: Identifier,
-    value: Box<dyn Expression>,
+pub struct LetStatement {
+    pub token: Token,
+    pub name: Identifier,
+    pub value: Option<Box<dyn Expression>>,
 }
 
 impl Statement for LetStatement {
@@ -17,5 +17,19 @@ impl Statement for LetStatement {
 
     fn token_literal(&self) -> String {
         return self.token.literal.clone();
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+impl Default for LetStatement {
+    fn default() -> Self {
+        Self {
+            token: Default::default(),
+            name: Default::default(),
+            value: Default::default(),
+        }
     }
 }

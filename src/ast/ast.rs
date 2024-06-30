@@ -1,7 +1,10 @@
+use std::any::Any;
+
 pub trait Statement {
     fn token_literal(&self) -> String;
 
     fn statement_node(&self);
+    fn as_any(&self) -> &dyn Any;
 }
 
 pub trait Expression {
