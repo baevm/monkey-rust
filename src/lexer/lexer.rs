@@ -28,9 +28,6 @@ impl Lexer {
         self.skip_whitespace();
 
         match self.ch {
-            '=' => {
-                token = self.new_token(Kind::Assign, self.ch);
-            }
             ';' => {
                 token = self.new_token(Kind::Semicolon, self.ch);
             }
@@ -51,6 +48,43 @@ impl Lexer {
             }
             '}' => {
                 token = self.new_token(Kind::Rbrace, self.ch);
+            }
+            '-' => {
+                token = self.new_token(Kind::Minus, self.ch);
+            }
+            '!' => {
+                if self.peek_char() == '=' {
+                    self.read_char();
+                    token = Token {
+                        kind: Kind::Neq,
+                        literal: "!=".to_string(),
+                    }
+                } else {
+                    token = self.new_token(Kind::Bang, self.ch);
+                }
+            }
+            '*' => {
+                token = self.new_token(Kind::Asterisk, self.ch);
+            }
+            '/' => {
+                token = self.new_token(Kind::Slash, self.ch);
+            }
+            '<' => {
+                token = self.new_token(Kind::Lt, self.ch);
+            }
+            '>' => {
+                token = self.new_token(Kind::Gt, self.ch);
+            }
+            '=' => {
+                if self.peek_char() == '=' {
+                    self.read_char();
+                    token = Token {
+                        kind: Kind::Eq,
+                        literal: "==".to_string(),
+                    };
+                } else {
+                    token = self.new_token(Kind::Assign, self.ch);
+                }
             }
             Self::EMPTY_CHAR => {
                 token.literal = "".to_string();
@@ -83,6 +117,7 @@ impl Lexer {
         }
     }
 
+    /// Reads current character in input
     fn read_char(&mut self) {
         if self.read_position >= self.input.len() {
             self.ch = Self::EMPTY_CHAR;
@@ -96,6 +131,19 @@ impl Lexer {
 
         self.position = self.read_position;
         self.read_position += 1;
+    }
+
+    /// Peeks next character in input
+    fn peek_char(&mut self) -> char {
+        if self.read_position >= self.input.len() {
+            return Self::EMPTY_CHAR;
+        } else {
+            return self
+                .input
+                .chars()
+                .nth(self.read_position)
+                .expect("peek_char failed read_position");
+        }
     }
 
     /// Checks if char is valid letter. Only ASCII and _
@@ -154,6 +202,18 @@ mod test {
             };
 
             let result = add(five, ten);
+
+            !-/*5;
+            5 < 10 > 5;
+
+            if (5 < 10) {
+                return true;
+            } else {
+                return false;
+            }
+
+            10 == 10;
+            10 != 9;
         ";
 
         let tests = Vec::from([
@@ -193,6 +253,43 @@ mod test {
             (token::Kind::Comma, ","),
             (token::Kind::Ident, "ten"),
             (token::Kind::Rparen, ")"),
+            (token::Kind::Semicolon, ";"),
+            (token::Kind::Bang, "!"),
+            (token::Kind::Minus, "-"),
+            (token::Kind::Slash, "/"),
+            (token::Kind::Asterisk, "*"),
+            (token::Kind::Number, "5"),
+            (token::Kind::Semicolon, ";"),
+            (token::Kind::Number, "5"),
+            (token::Kind::Lt, "<"),
+            (token::Kind::Number, "10"),
+            (token::Kind::Gt, ">"),
+            (token::Kind::Number, "5"),
+            (token::Kind::Semicolon, ";"),
+            (token::Kind::If, "if"),
+            (token::Kind::Lparen, "("),
+            (token::Kind::Number, "5"),
+            (token::Kind::Lt, "<"),
+            (token::Kind::Number, "10"),
+            (token::Kind::Rparen, ")"),
+            (token::Kind::Lbrace, "{"),
+            (token::Kind::Return, "return"),
+            (token::Kind::True, "true"),
+            (token::Kind::Semicolon, ";"),
+            (token::Kind::Rbrace, "}"),
+            (token::Kind::Else, "else"),
+            (token::Kind::Lbrace, "{"),
+            (token::Kind::Return, "return"),
+            (token::Kind::False, "false"),
+            (token::Kind::Semicolon, ";"),
+            (token::Kind::Rbrace, "}"),
+            (token::Kind::Number, "10"),
+            (token::Kind::Eq, "=="),
+            (token::Kind::Number, "10"),
+            (token::Kind::Semicolon, ";"),
+            (token::Kind::Number, "10"),
+            (token::Kind::Neq, "!="),
+            (token::Kind::Number, "9"),
             (token::Kind::Semicolon, ";"),
             (token::Kind::Eof, ""),
         ]);

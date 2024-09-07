@@ -16,6 +16,14 @@ pub enum Kind {
     // operators
     Assign,
     Plus,
+    Minus,
+    Asterisk,
+    Slash,
+    Bang,
+    Lt,
+    Gt,
+    Eq,
+    Neq,
 
     // delimiters
     Comma,
@@ -30,6 +38,10 @@ pub enum Kind {
     Function,
     Let,
     Return,
+    True,
+    False,
+    If,
+    Else,
 }
 
 impl Default for Kind {
@@ -47,6 +59,14 @@ impl Kind {
             Kind::Number => "number",
             Kind::Assign => "=",
             Kind::Plus => "+",
+            Kind::Asterisk => "*",
+            Kind::Minus => "-",
+            Kind::Slash => "/",
+            Kind::Bang => "!",
+            Kind::Lt => "<",
+            Kind::Gt => ">",
+            Kind::Eq => "==",
+            Kind::Neq => "!=",
             Kind::Comma => ",",
             Kind::Semicolon => ";",
             Kind::Lparen => "(",
@@ -56,6 +76,10 @@ impl Kind {
             Kind::Function => "function",
             Kind::Let => "let",
             Kind::Return => "return",
+            Kind::True => "true",
+            Kind::False => "false",
+            Kind::If => "if",
+            Kind::Else => "else",
         }
     }
 
@@ -65,6 +89,10 @@ impl Kind {
             "function" => Kind::Function,
             "let" => Kind::Let,
             "return" => Kind::Return,
+            "true" => Kind::True,
+            "false" => Kind::False,
+            "if" => Kind::If,
+            "else" => Kind::Else,
             _ => Kind::Ident,
         }
     }
