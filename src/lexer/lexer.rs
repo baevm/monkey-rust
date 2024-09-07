@@ -22,7 +22,7 @@ impl Lexer {
         return lexer;
     }
 
-    fn next_token(&mut self) -> Token {
+    pub fn next_token(&mut self) -> Token {
         let mut token = Token::default();
 
         self.skip_whitespace();
