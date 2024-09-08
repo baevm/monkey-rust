@@ -1,11 +1,12 @@
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Token {
     pub kind: Kind,
     pub literal: String,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Default, Debug, Copy, Clone)]
 pub enum Kind {
+    #[default]
     Eof,
     Illegal,
 
@@ -42,12 +43,6 @@ pub enum Kind {
     False,
     If,
     Else,
-}
-
-impl Default for Kind {
-    fn default() -> Self {
-        Kind::Eof
-    }
 }
 
 impl Kind {
