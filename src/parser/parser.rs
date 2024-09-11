@@ -78,13 +78,13 @@ impl Parser {
         let let_stmt = statement::LetStatement {
             kind: kind,
             name: identifier,
-            value: ast::Expression::Identifier(expression::Identifier {
+            value: Some(ast::Expression::Identifier(expression::Identifier {
                 kind: Token {
                     kind: Kind::Ident,
                     literal: "".to_string(),
                 },
                 value: "".to_string(),
-            }),
+            })),
         };
 
         while !self.is_curr_token(Kind::Semicolon) {
