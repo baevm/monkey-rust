@@ -1,6 +1,9 @@
 use crate::token::Token;
 
-use super::ast::{self, Expression};
+use super::{
+    ast::{self, Expression},
+    Identifier,
+};
 
 #[derive(Debug)]
 pub struct LetStatement {
@@ -16,12 +19,12 @@ impl ast::Node for LetStatement {
 }
 
 #[derive(Debug)]
-pub struct Identifier {
-    pub kind: Token, // token.Ident
-    pub value: String,
+pub struct ReturnStatement {
+    pub kind: Token, // token.Return
+    pub return_value: Option<Expression>,
 }
 
-impl ast::Node for Identifier {
+impl ast::Node for ReturnStatement {
     fn token_literal(&self) -> String {
         return self.kind.literal.clone();
     }

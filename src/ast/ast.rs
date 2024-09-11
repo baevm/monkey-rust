@@ -1,4 +1,4 @@
-use super::statement;
+use super::{expression, statement};
 
 pub trait Node {
     fn token_literal(&self) -> String;
@@ -7,19 +7,21 @@ pub trait Node {
 #[derive(Debug)]
 pub enum Statement {
     LetStatement(statement::LetStatement),
+    ReturnStatement(statement::ReturnStatement),
 }
 
 impl Statement {
     pub fn token_literal(&self) -> String {
         match self {
             Statement::LetStatement(v) => v.token_literal(),
+            Statement::ReturnStatement(v) => v.token_literal(),
         }
     }
 }
 
 #[derive(Debug)]
 pub enum Expression {
-    Identifier(statement::Identifier),
+    Identifier(expression::Identifier),
 }
 
 impl Expression {

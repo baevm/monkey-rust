@@ -1,5 +1,5 @@
 use crate::{
-    ast::{ast, statement},
+    ast::{ast, expression, statement},
     lexer::lexer,
     token::{Kind, Token},
 };
@@ -53,6 +53,7 @@ impl Parser {
     fn parse_statement(&mut self) -> Option<ast::Statement> {
         match self.curr_token.kind {
             Kind::Let => self.parse_let_statement(),
+            Kind::Return => self.parse_return_statement(),
             _ => None,
         }
     }
@@ -65,7 +66,7 @@ impl Parser {
             return None;
         }
 
-        let identifier = statement::Identifier {
+        let identifier = expression::Identifier {
             kind: self.curr_token.clone(),
             value: self.curr_token.literal.clone(),
         };
@@ -77,7 +78,7 @@ impl Parser {
         let let_stmt = statement::LetStatement {
             kind: kind,
             name: identifier,
-            value: ast::Expression::Identifier(statement::Identifier {
+            value: ast::Expression::Identifier(expression::Identifier {
                 kind: Token {
                     kind: Kind::Ident,
                     literal: "".to_string(),
@@ -91,6 +92,17 @@ impl Parser {
         }
 
         Some(ast::Statement::LetStatement(let_stmt))
+    }
+
+    fn parse_return_statement(&mut self) -> Option<ast::Statement> {
+        let kind = self.curr_token.clone();
+
+        let return_stmt = statement::ReturnStatement {
+            kind: kind,
+            return_value: None,
+        };
+
+        Some(ast::Statement::ReturnStatement(return_stmt))
     }
 
     fn expect_peek(&mut self, expected: Kind) -> bool {
@@ -160,6 +172,28 @@ mod test {
 
             assert_eq!(&stmt.name.value, expected_name);
             assert_eq!(&stmt.name.token_literal(), expected_name);
+        }
+    }
+
+    #[test]
+    fn test_return_statement() {
+        let input = "
+            return 5;
+            return 123321:
+        ";
+
+        let lexer = lexer::Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        assert_eq!(parser.errors().len(), 0, "errors should be zero");
+
+        let tests = Vec::from(["5".to_string(), "123321".to_string()]);
+
+        for (idx, expected_value) in tests.iter().enumerate() {
+            let stmt = program.statements.get(idx).unwrap();
+
+            assert_eq!(stmt.token_literal(), "return");
         }
     }
 }
