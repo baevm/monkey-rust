@@ -1,6 +1,25 @@
 use crate::token::Token;
 
-use super::ast::{self, Expression};
+use super::ast::{self, Node};
+
+#[derive(Debug)]
+pub enum Expression {
+    Identifier(Identifier),
+}
+
+impl Node for Expression {
+    fn token_literal(&self) -> String {
+        match self {
+            Expression::Identifier(v) => v.token_literal(),
+        }
+    }
+
+    fn to_str(&self) -> String {
+        match self {
+            Expression::Identifier(v) => v.to_str(),
+        }
+    }
+}
 
 // Expression statement struct
 // Example: `

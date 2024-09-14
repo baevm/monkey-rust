@@ -1,9 +1,31 @@
 use crate::token::Token;
 
 use super::{
-    ast::{self, Expression},
-    Identifier,
+    ast::{self, Node},
+    Expression, Identifier,
 };
+
+#[derive(Debug)]
+pub enum Statement {
+    LetStatement(LetStatement),
+    ReturnStatement(ReturnStatement),
+}
+
+impl Node for Statement {
+    fn token_literal(&self) -> String {
+        match self {
+            Statement::LetStatement(v) => v.token_literal(),
+            Statement::ReturnStatement(v) => v.token_literal(),
+        }
+    }
+
+    fn to_str(&self) -> String {
+        match self {
+            Statement::LetStatement(v) => v.to_str(),
+            Statement::ReturnStatement(v) => v.to_str(),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct LetStatement {

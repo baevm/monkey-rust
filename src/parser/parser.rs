@@ -1,5 +1,5 @@
 use crate::{
-    ast::{ast, expression, statement},
+    ast::{ast, expression, statement, Expression, Statement},
     lexer::lexer,
     token::{Kind, Token},
 };
@@ -50,7 +50,7 @@ impl Parser {
         self.peek_token = self.lexer.next_token();
     }
 
-    fn parse_statement(&mut self) -> Option<ast::Statement> {
+    fn parse_statement(&mut self) -> Option<Statement> {
         match self.curr_token.kind {
             Kind::Let => self.parse_let_statement(),
             Kind::Return => self.parse_return_statement(),
@@ -59,7 +59,7 @@ impl Parser {
     }
 
     /// Parses let statements: "let foo = 5;"
-    fn parse_let_statement(&mut self) -> Option<ast::Statement> {
+    fn parse_let_statement(&mut self) -> Option<Statement> {
         let kind = self.curr_token.clone();
 
         if !self.expect_peek(Kind::Ident) {
@@ -78,7 +78,7 @@ impl Parser {
         let let_stmt = statement::LetStatement {
             token: kind,
             name: identifier,
-            value: Some(ast::Expression::Identifier(expression::Identifier {
+            value: Some(Expression::Identifier(expression::Identifier {
                 token: Token {
                     kind: Kind::Ident,
                     literal: "".to_string(),
@@ -91,10 +91,10 @@ impl Parser {
             self.next_token();
         }
 
-        Some(ast::Statement::LetStatement(let_stmt))
+        Some(Statement::LetStatement(let_stmt))
     }
 
-    fn parse_return_statement(&mut self) -> Option<ast::Statement> {
+    fn parse_return_statement(&mut self) -> Option<Statement> {
         let kind = self.curr_token.clone();
 
         let return_stmt = statement::ReturnStatement {
@@ -102,7 +102,7 @@ impl Parser {
             return_value: None,
         };
 
-        Some(ast::Statement::ReturnStatement(return_stmt))
+        Some(Statement::ReturnStatement(return_stmt))
     }
 
     fn expect_peek(&mut self, expected: Kind) -> bool {
@@ -138,7 +138,7 @@ impl Parser {
 
 mod test {
     use crate::{
-        ast::ast::{Node, Statement},
+        ast::{ast::Node, Statement},
         lexer,
     };
 
@@ -190,7 +190,7 @@ mod test {
 
         let tests = Vec::from(["5".to_string(), "123321".to_string()]);
 
-        for (idx, expected_value) in tests.iter().enumerate() {
+        for (idx, _) in tests.iter().enumerate() {
             let stmt = program.statements.get(idx).unwrap();
 
             assert_eq!(stmt.token_literal(), "return");

@@ -1,49 +1,8 @@
-use super::{expression, statement};
+use super::Statement;
 
 pub trait Node {
     fn token_literal(&self) -> String;
     fn to_str(&self) -> String;
-}
-
-#[derive(Debug)]
-pub enum Statement {
-    LetStatement(statement::LetStatement),
-    ReturnStatement(statement::ReturnStatement),
-}
-
-impl Node for Statement {
-    fn token_literal(&self) -> String {
-        match self {
-            Statement::LetStatement(v) => v.token_literal(),
-            Statement::ReturnStatement(v) => v.token_literal(),
-        }
-    }
-
-    fn to_str(&self) -> String {
-        match self {
-            Statement::LetStatement(v) => v.to_str(),
-            Statement::ReturnStatement(v) => v.to_str(),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum Expression {
-    Identifier(expression::Identifier),
-}
-
-impl Node for Expression {
-    fn token_literal(&self) -> String {
-        match self {
-            Expression::Identifier(v) => v.token_literal(),
-        }
-    }
-
-    fn to_str(&self) -> String {
-        match self {
-            Expression::Identifier(v) => v.to_str(),
-        }
-    }
 }
 
 /// Root node of every AST
@@ -73,11 +32,11 @@ impl Node for Program {
 
 mod test {
     use crate::{
-        ast::{ast::Node, Identifier, LetStatement},
+        ast::{ast::Node, Expression, Identifier, LetStatement},
         token::{Kind, Token},
     };
 
-    use super::{Expression, Program, Statement};
+    use super::{Program, Statement};
 
     #[test]
     fn test_to_str() {
