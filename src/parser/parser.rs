@@ -67,7 +67,7 @@ impl Parser {
         }
 
         let identifier = expression::Identifier {
-            kind: self.curr_token.clone(),
+            token: self.curr_token.clone(),
             value: self.curr_token.literal.clone(),
         };
 
@@ -76,10 +76,10 @@ impl Parser {
         }
 
         let let_stmt = statement::LetStatement {
-            kind: kind,
+            token: kind,
             name: identifier,
             value: Some(ast::Expression::Identifier(expression::Identifier {
-                kind: Token {
+                token: Token {
                     kind: Kind::Ident,
                     literal: "".to_string(),
                 },
@@ -98,7 +98,7 @@ impl Parser {
         let kind = self.curr_token.clone();
 
         let return_stmt = statement::ReturnStatement {
-            kind: kind,
+            token: kind,
             return_value: None,
         };
 

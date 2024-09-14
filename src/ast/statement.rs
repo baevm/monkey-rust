@@ -7,14 +7,14 @@ use super::{
 
 #[derive(Debug)]
 pub struct LetStatement {
-    pub kind: Token, // token.Let
+    pub token: Token, // token.Let
     pub name: Identifier,
     pub value: Option<Expression>,
 }
 
 impl ast::Node for LetStatement {
     fn token_literal(&self) -> String {
-        return self.kind.literal.clone();
+        return self.token.literal.clone();
     }
 
     fn to_str(&self) -> String {
@@ -37,17 +37,26 @@ impl ast::Node for LetStatement {
 
 #[derive(Debug)]
 pub struct ReturnStatement {
-    pub kind: Token, // token.Return
+    pub token: Token, // token.Return
     pub return_value: Option<Expression>,
 }
 
 impl ast::Node for ReturnStatement {
     fn token_literal(&self) -> String {
-        return self.kind.literal.clone();
+        return self.token.literal.clone();
     }
 
     fn to_str(&self) -> String {
         let mut sb = String::new();
+
+        sb.push_str(&self.token_literal());
+        sb.push_str(" ");
+
+        if let Some(return_value) = &self.return_value {
+            sb.push_str(&return_value.to_str());
+        }
+
+        sb.push_str(";");
 
         sb
     }

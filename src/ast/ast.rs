@@ -40,7 +40,9 @@ impl Node for Expression {
     }
 
     fn to_str(&self) -> String {
-        todo!()
+        match self {
+            Expression::Identifier(v) => v.to_str(),
+        }
     }
 }
 
@@ -66,5 +68,45 @@ impl Node for Program {
         }
 
         sb
+    }
+}
+
+mod test {
+    use crate::{
+        ast::{ast::Node, Identifier, LetStatement},
+        token::{Kind, Token},
+    };
+
+    use super::{Expression, Program, Statement};
+
+    #[test]
+    fn test_to_str() {
+        // "let foo = bar;"
+        let stmt = Statement::LetStatement(LetStatement {
+            token: Token {
+                kind: Kind::Let,
+                literal: "let".to_string(),
+            },
+            name: Identifier {
+                token: Token {
+                    kind: Kind::Ident,
+                    literal: "foo".to_string(),
+                },
+                value: "foo".to_string(),
+            },
+            value: Some(Expression::Identifier(Identifier {
+                token: Token {
+                    kind: Kind::Ident,
+                    literal: "bar".to_string(),
+                },
+                value: "bar".to_string(),
+            })),
+        });
+
+        let program = Program {
+            statements: vec![stmt],
+        };
+
+        assert_eq!(program.to_str(), "let foo = bar;")
     }
 }

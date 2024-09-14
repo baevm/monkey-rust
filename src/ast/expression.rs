@@ -9,32 +9,38 @@ use super::ast::{self, Expression};
 //`
 #[derive(Debug)]
 pub struct ExpressionStatement {
-    pub kind: Token, // first token of expression
-    pub expression: Expression,
+    pub token: Token, // first token of expression
+    pub expression: Option<Expression>,
 }
 
 impl ast::Node for ExpressionStatement {
     fn token_literal(&self) -> String {
-        return self.kind.literal.clone();
+        return self.token.literal.clone();
     }
 
     fn to_str(&self) -> String {
-        todo!()
+        let mut sb = String::new();
+
+        if let Some(expr) = &self.expression {
+            sb.push_str(&expr.to_str());
+        }
+
+        sb
     }
 }
 
 #[derive(Debug)]
 pub struct Identifier {
-    pub kind: Token, // token.Ident
+    pub token: Token, // token.Ident
     pub value: String,
 }
 
 impl ast::Node for Identifier {
     fn token_literal(&self) -> String {
-        return self.kind.literal.clone();
+        return self.token.literal.clone();
     }
 
     fn to_str(&self) -> String {
-        todo!()
+        self.value.clone()
     }
 }
