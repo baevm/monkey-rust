@@ -1,14 +1,12 @@
 use crate::token::Token;
 
-use super::{
-    ast::{self, Node},
-    Expression, Identifier,
-};
+use super::{ast::Node, Expression, Identifier};
 
 #[derive(Debug)]
 pub enum Statement {
     LetStatement(LetStatement),
     ReturnStatement(ReturnStatement),
+    ExpressionStatement(ExpressionStatement),
 }
 
 impl Node for Statement {
@@ -16,6 +14,7 @@ impl Node for Statement {
         match self {
             Statement::LetStatement(v) => v.token_literal(),
             Statement::ReturnStatement(v) => v.token_literal(),
+            Statement::ExpressionStatement(v) => v.token_literal(),
         }
     }
 
@@ -23,6 +22,7 @@ impl Node for Statement {
         match self {
             Statement::LetStatement(v) => v.to_str(),
             Statement::ReturnStatement(v) => v.to_str(),
+            Statement::ExpressionStatement(v) => v.to_str(),
         }
     }
 }
@@ -34,7 +34,7 @@ pub struct LetStatement {
     pub value: Option<Expression>,
 }
 
-impl ast::Node for LetStatement {
+impl Node for LetStatement {
     fn token_literal(&self) -> String {
         return self.token.literal.clone();
     }
@@ -63,7 +63,7 @@ pub struct ReturnStatement {
     pub return_value: Option<Expression>,
 }
 
-impl ast::Node for ReturnStatement {
+impl Node for ReturnStatement {
     fn token_literal(&self) -> String {
         return self.token.literal.clone();
     }
@@ -79,6 +79,32 @@ impl ast::Node for ReturnStatement {
         }
 
         sb.push_str(";");
+
+        sb
+    }
+}
+
+// Expression statement struct
+// Example:
+// let x = 5;
+// x + 10; <- ExpressionStatement
+#[derive(Debug)]
+pub struct ExpressionStatement {
+    pub token: Token, // first token of expression
+    pub expression: Option<Expression>,
+}
+
+impl Node for ExpressionStatement {
+    fn token_literal(&self) -> String {
+        return self.token.literal.clone();
+    }
+
+    fn to_str(&self) -> String {
+        let mut sb = String::new();
+
+        if let Some(expr) = &self.expression {
+            sb.push_str(&expr.to_str());
+        }
 
         sb
     }

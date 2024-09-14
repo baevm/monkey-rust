@@ -1,5 +1,5 @@
 use crate::{
-    ast::{ast, expression, statement, Expression, Statement},
+    ast::{ast, expression, statement, Expression, ExpressionStatement, Statement},
     lexer::lexer,
     token::{Kind, Token},
 };
@@ -11,6 +11,17 @@ pub struct Parser {
     peek_token: Token,
 
     errors: Vec<String>,
+}
+
+/// Operator precedence
+enum Precedences {
+    Lowest,
+    Equals,      // ==
+    LessGreater, // < or >
+    Sum,         // +
+    Product,     // *
+    Prefix,      // -foo or !foo
+    Call,        // foo_function()
 }
 
 impl Parser {
@@ -54,8 +65,28 @@ impl Parser {
         match self.curr_token.kind {
             Kind::Let => self.parse_let_statement(),
             Kind::Return => self.parse_return_statement(),
+            _ => self.parse_expression_statement(),
+        }
+    }
+
+    fn parse_expression(&self, precedence: Precedences) -> Option<Expression> {
+        let expr = self.parse_prefix_expression(self.curr_token.kind)?;
+
+        Some(expr)
+    }
+
+    fn parse_prefix_expression(&self, kind: Kind) -> Option<Expression> {
+        match kind {
+            Kind::Ident => Some(self.parse_identifier()),
             _ => None,
         }
+    }
+
+    fn parse_identifier(&self) -> Expression {
+        Expression::Identifier(expression::Identifier {
+            token: self.curr_token.clone(),
+            value: self.curr_token.literal.clone(),
+        })
     }
 
     /// Parses let statements: "let foo = 5;"
@@ -94,15 +125,29 @@ impl Parser {
         Some(Statement::LetStatement(let_stmt))
     }
 
+    /// Parses return statements: "return foo;"
     fn parse_return_statement(&mut self) -> Option<Statement> {
-        let kind = self.curr_token.clone();
+        let token = self.curr_token.clone();
 
         let return_stmt = statement::ReturnStatement {
-            token: kind,
+            token,
             return_value: None,
         };
 
         Some(Statement::ReturnStatement(return_stmt))
+    }
+
+    fn parse_expression_statement(&mut self) -> Option<Statement> {
+        let token = self.curr_token.clone();
+        let expression = self.parse_expression(Precedences::Lowest);
+
+        let stmt = ExpressionStatement { token, expression };
+
+        if self.is_peek_token(Kind::Semicolon) {
+            self.next_token()
+        }
+
+        Some(Statement::ExpressionStatement(stmt))
     }
 
     fn expect_peek(&mut self, expected: Kind) -> bool {
@@ -138,7 +183,7 @@ impl Parser {
 
 mod test {
     use crate::{
-        ast::{ast::Node, Statement},
+        ast::{ast::Node, Expression, Statement},
         lexer,
     };
 
@@ -179,7 +224,6 @@ mod test {
     fn test_return_statement() {
         let input = "
             return 5;
-            return 123321:
         ";
 
         let lexer = lexer::Lexer::new(input);
@@ -188,12 +232,48 @@ mod test {
 
         assert_eq!(parser.errors().len(), 0, "errors should be zero");
 
-        let tests = Vec::from(["5".to_string(), "123321".to_string()]);
+        for stmt in program.statements {
+            println!("{:?}", stmt);
 
-        for (idx, _) in tests.iter().enumerate() {
-            let stmt = program.statements.get(idx).unwrap();
-
-            assert_eq!(stmt.token_literal(), "return");
+            match stmt {
+                Statement::ReturnStatement(_) => assert_eq!(stmt.token_literal(), "return"),
+                Statement::ExpressionStatement(_) => assert_eq!(stmt.token_literal(), "5"),
+                _ => unreachable!(),
+            }
         }
+    }
+
+    #[test]
+    fn test_identifier_expression() {
+        let input = "foobar;";
+
+        let lexer = lexer::Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        assert_eq!(parser.errors().len(), 0, "errors should be zero");
+
+        assert_eq!(
+            program.statements.len(),
+            1,
+            "program has not enough statements"
+        );
+
+        let stmt = program.statements.first().unwrap();
+
+        let stmt = match stmt {
+            Statement::ExpressionStatement(v) => v,
+            _ => panic!("statement not ExpressionStatement"),
+        };
+
+        let expr = stmt.expression.as_ref().expect("expression not Some");
+
+        let ident = match expr {
+            Expression::Identifier(v) => v,
+            _ => panic!("expression not Identifier"),
+        };
+
+        assert_eq!(ident.value, "foobar");
+        assert_eq!(ident.token_literal(), "foobar");
     }
 }
