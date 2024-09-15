@@ -70,15 +70,25 @@ impl Parser {
     }
 
     fn parse_expression(&mut self, precedence: Precedences) -> Option<Expression> {
-        let expr = self.parse_prefix_expression(self.curr_token.kind)?;
+        let expr = self.get_parsed_expression(self.curr_token.kind);
 
-        Some(expr)
+        if expr.is_none() {
+            let message = format!(
+                "no prefix parse function for {:?} found",
+                self.curr_token.kind
+            );
+            self.errors.push(message);
+            return None;
+        }
+
+        expr
     }
 
-    fn parse_prefix_expression(&mut self, kind: Kind) -> Option<Expression> {
+    fn get_parsed_expression(&mut self, kind: Kind) -> Option<Expression> {
         match kind {
             Kind::Ident => self.parse_identifier(),
             Kind::Number => self.parse_integer_literal(),
+            Kind::Bang | Kind::Minus => self.parse_prefix_expression(),
             _ => None,
         }
     }
@@ -168,6 +178,24 @@ impl Parser {
         };
 
         Some(Expression::IntegerLiteral(literal))
+    }
+
+    // Parsed prefix expressions: -100, !foo, etc.
+    fn parse_prefix_expression(&mut self) -> Option<Expression> {
+        let mut expr = expression::PrefixExpression {
+            token: self.curr_token.clone(),
+            operator: self.curr_token.literal.clone(),
+            right: None,
+        };
+
+        // Move to "right" side
+        self.next_token();
+
+        if let Some(right_val) = self.parse_expression(Precedences::Prefix) {
+            expr.right = Some(Box::new(right_val));
+        }
+
+        Some(Expression::PrefixExpression(expr))
     }
 
     fn expect_peek(&mut self, expected: Kind) -> bool {
@@ -327,5 +355,54 @@ mod test {
 
         assert_eq!(literal.value, 5);
         assert_eq!(literal.token_literal(), "5");
+    }
+
+    #[test]
+    fn test_prefix_expression() {
+        let tests = vec![("!5", "!", 5), ("-10", "-", 10)];
+
+        for (input, expected_prefix, expected_right) in tests {
+            let lexer = lexer::Lexer::new(input);
+            let mut parser = Parser::new(lexer);
+            let program = parser.parse_program();
+
+            for error in parser.errors() {
+                println!("ERROR: {}", error);
+            }
+
+            assert_eq!(parser.errors().len(), 0, "errors should be zero");
+
+            assert_eq!(
+                program.statements.len(),
+                1,
+                "program has not enough statements"
+            );
+
+            let stmt = program.statements.first().unwrap();
+
+            let stmt = match stmt {
+                Statement::ExpressionStatement(v) => v,
+                _ => panic!("statement not ExpressionStatement"),
+            };
+
+            let expr = stmt.expression.as_ref().expect("expression not Some");
+
+            let prefix_expr = match expr {
+                Expression::PrefixExpression(v) => v,
+                _ => panic!("expression not PrefixExpression"),
+            };
+
+            assert_eq!(prefix_expr.operator, expected_prefix);
+
+            // test integer literal
+            if let Some(right_expr) = prefix_expr.right.as_deref() {
+                let int_literal = match right_expr {
+                    Expression::IntegerLiteral(t) => t,
+                    _ => panic!("not integer literal"),
+                };
+
+                assert_eq!(int_literal.value, expected_right);
+            }
+        }
     }
 }

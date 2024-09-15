@@ -6,6 +6,7 @@ use super::ast::Node;
 pub enum Expression {
     Identifier(Identifier),
     IntegerLiteral(IntegerLiteral),
+    PrefixExpression(PrefixExpression),
 }
 
 impl Node for Expression {
@@ -13,6 +14,7 @@ impl Node for Expression {
         match self {
             Expression::Identifier(v) => v.token_literal(),
             Expression::IntegerLiteral(v) => v.token_literal(),
+            Expression::PrefixExpression(v) => v.token_literal(),
         }
     }
 
@@ -20,6 +22,7 @@ impl Node for Expression {
         match self {
             Expression::Identifier(v) => v.to_str(),
             Expression::IntegerLiteral(v) => v.to_str(),
+            Expression::PrefixExpression(v) => v.to_str(),
         }
     }
 }
@@ -57,5 +60,31 @@ impl Node for IntegerLiteral {
 
     fn to_str(&self) -> String {
         self.token.literal.clone()
+    }
+}
+
+// Prefix expression struct
+// Example: !foo, -10;
+#[derive(Debug)]
+pub struct PrefixExpression {
+    pub token: Token, // prefix token: token.Minus, token.Bang
+    pub operator: String,
+    pub right: Option<Box<Expression>>,
+}
+
+impl Node for PrefixExpression {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+
+    fn to_str(&self) -> String {
+        let mut sb = String::new();
+
+        sb.push_str("(");
+        sb.push_str(&self.operator);
+        sb.push_str(&self.right.as_ref().unwrap().to_str());
+        sb.push_str(")");
+
+        sb
     }
 }
