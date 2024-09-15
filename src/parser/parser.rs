@@ -69,24 +69,25 @@ impl Parser {
         }
     }
 
-    fn parse_expression(&self, precedence: Precedences) -> Option<Expression> {
+    fn parse_expression(&mut self, precedence: Precedences) -> Option<Expression> {
         let expr = self.parse_prefix_expression(self.curr_token.kind)?;
 
         Some(expr)
     }
 
-    fn parse_prefix_expression(&self, kind: Kind) -> Option<Expression> {
+    fn parse_prefix_expression(&mut self, kind: Kind) -> Option<Expression> {
         match kind {
-            Kind::Ident => Some(self.parse_identifier()),
+            Kind::Ident => self.parse_identifier(),
+            Kind::Number => self.parse_integer_literal(),
             _ => None,
         }
     }
 
-    fn parse_identifier(&self) -> Expression {
-        Expression::Identifier(expression::Identifier {
+    fn parse_identifier(&self) -> Option<Expression> {
+        Some(Expression::Identifier(expression::Identifier {
             token: self.curr_token.clone(),
             value: self.curr_token.literal.clone(),
-        })
+        }))
     }
 
     /// Parses let statements: "let foo = 5;"
@@ -148,6 +149,25 @@ impl Parser {
         }
 
         Some(Statement::ExpressionStatement(stmt))
+    }
+
+    // Parses integer literals: 1, 5, 100, etc.
+    fn parse_integer_literal(&mut self) -> Option<Expression> {
+        let token = self.curr_token.clone();
+        let value = self.curr_token.literal.clone().parse::<i64>();
+
+        if value.is_err() {
+            let message = format!("could not parse {} as integer", self.curr_token.literal);
+            self.errors.push(message);
+            return None;
+        }
+
+        let literal = expression::IntegerLiteral {
+            token,
+            value: value.unwrap(),
+        };
+
+        Some(Expression::IntegerLiteral(literal))
     }
 
     fn expect_peek(&mut self, expected: Kind) -> bool {
@@ -233,8 +253,6 @@ mod test {
         assert_eq!(parser.errors().len(), 0, "errors should be zero");
 
         for stmt in program.statements {
-            println!("{:?}", stmt);
-
             match stmt {
                 Statement::ReturnStatement(_) => assert_eq!(stmt.token_literal(), "return"),
                 Statement::ExpressionStatement(_) => assert_eq!(stmt.token_literal(), "5"),
@@ -275,5 +293,39 @@ mod test {
 
         assert_eq!(ident.value, "foobar");
         assert_eq!(ident.token_literal(), "foobar");
+    }
+
+    #[test]
+    fn test_integer_literal_expression() {
+        let input = "5;";
+
+        let lexer = lexer::Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        assert_eq!(parser.errors().len(), 0, "errors should be zero");
+
+        assert_eq!(
+            program.statements.len(),
+            1,
+            "program has not enough statements"
+        );
+
+        let stmt = program.statements.first().unwrap();
+
+        let stmt = match stmt {
+            Statement::ExpressionStatement(v) => v,
+            _ => panic!("statement not ExpressionStatement"),
+        };
+
+        let expr = stmt.expression.as_ref().expect("expression not Some");
+
+        let literal = match expr {
+            Expression::IntegerLiteral(v) => v,
+            _ => panic!("expression not IntegerLiteral"),
+        };
+
+        assert_eq!(literal.value, 5);
+        assert_eq!(literal.token_literal(), "5");
     }
 }
