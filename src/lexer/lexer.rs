@@ -169,7 +169,7 @@ impl Lexer {
 
     /// Skips whitespaces
     fn skip_whitespace(&mut self) {
-        while self.ch == ' ' || self.ch == '\t' || self.ch == '\n' || self.ch == '\r' {
+        while self.ch.is_ascii_whitespace() {
             self.read_char();
         }
     }
